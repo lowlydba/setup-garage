@@ -116,3 +116,15 @@ jobs:
           aws s3 cp upload.txt "s3://${BUCKET}/upload.txt"
           aws s3 cp "s3://${BUCKET}/upload.txt" download.txt
           diff upload.txt download.txt
+
+  are-we-good:
+    name: Are we good?
+    runs-on: ubuntu-slim
+    needs: [test, e2e-defaults, e2e-custom]
+    if: always()
+    permissions: {}
+
+    steps:
+      - uses: lowlydba/are-we-good@375b418aa07a163e0614537a3fa5c51e53a757e9 # v1.0.0
+        with:
+          jobs: ${{ toJSON(needs) }}
