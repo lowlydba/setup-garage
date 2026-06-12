@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+*.swp
+*.swo
+*~
+
+# VS Code — allow shared workspace settings, ignore personal
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
