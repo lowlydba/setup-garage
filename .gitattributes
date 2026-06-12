@@ -1,6 +1,12 @@
 # Normalize line endings
 * text=auto eol=lf
 
+# Force LF for shell scripts and other Unix-consumed files
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.toml  text eol=lf
+
 # Force CRLF for Windows-only files
 *.bat   text eol=crlf
 *.cmd   text eol=crlf

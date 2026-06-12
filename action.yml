@@ -1,0 +1,80 @@
+name: Setup Garage
+description: >-
+  Start a single-node, dockerized Garage S3 service for testing code against
+  a real S3 API in CI. Zero required configuration.
+author: lowlydba
+
+branding:
+  icon: database
+  color: green
+
+inputs:
+  garage-version:
+    description: Garage container image tag (v2.3.0 or newer required).
+    required: false
+    default: v2.3.0
+  bucket:
+    description: Name of the default bucket to create.
+    required: false
+    default: garage
+  access-key-id:
+    description: S3 access key ID. Auto-generated when empty. Must start with "GK".
+    required: false
+    default: ""
+  secret-access-key:
+    description: S3 secret access key. Auto-generated when empty.
+    required: false
+    default: ""
+  region:
+    description: S3 region name reported by Garage.
+    required: false
+    default: garage-east-1
+  s3-port:
+    description: Host port to expose the S3 API on.
+    required: false
+    default: "3900"
+  container-name:
+    description: Name for the Garage docker container.
+    required: false
+    default: garage
+  set-aws-env:
+    description: >-
+      Export AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINT_URL,
+      AWS_REGION and AWS_DEFAULT_REGION so later steps auto-authenticate.
+      Set to "false" if the job also uses real AWS credentials.
+    required: false
+    default: "true"
+
+outputs:
+  s3-endpoint:
+    description: S3 API endpoint URL (e.g. http://localhost:3900).
+    value: ${{ steps.garage.outputs.s3-endpoint }}
+  region:
+    description: S3 region name.
+    value: ${{ steps.garage.outputs.region }}
+  bucket:
+    description: Name of the created bucket.
+    value: ${{ steps.garage.outputs.bucket }}
+  access-key-id:
+    description: S3 access key ID.
+    value: ${{ steps.garage.outputs.access-key-id }}
+  secret-access-key:
+    description: S3 secret access key (masked in logs).
+    value: ${{ steps.garage.outputs.secret-access-key }}
+
+runs:
+  using: composite
+  steps:
+    - name: Start Garage
+      id: garage
+      shell: bash
+      env:
+        INPUT_GARAGE_VERSION: ${{ inputs.garage-version }}
+        INPUT_BUCKET: ${{ inputs.bucket }}
+        INPUT_ACCESS_KEY_ID: ${{ inputs.access-key-id }}
+        INPUT_SECRET_ACCESS_KEY: ${{ inputs.secret-access-key }}
+        INPUT_REGION: ${{ inputs.region }}
+        INPUT_S3_PORT: ${{ inputs.s3-port }}
+        INPUT_CONTAINER_NAME: ${{ inputs.container-name }}
+        INPUT_SET_AWS_ENV: ${{ inputs.set-aws-env }}
+      run: bash "${GITHUB_ACTION_PATH}/scripts/setup-garage.sh"

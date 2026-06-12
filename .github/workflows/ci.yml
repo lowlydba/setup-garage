@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint & unit tests
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run shellcheck
+        run: shellcheck scripts/*.sh tests/*.sh
+
+      - name: Run zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pipx run zizmor --persona=pedantic .
+
+      - name: Run unit tests
+        run: bash tests/unit.sh
+
+  e2e-defaults:
+    name: E2E (defaults)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Garage
+        id: garage
+        uses: ./
+
+      - name: Verify outputs
+        env:
+          S3_ENDPOINT: ${{ steps.garage.outputs.s3-endpoint }}
+          REGION: ${{ steps.garage.outputs.region }}
+          BUCKET: ${{ steps.garage.outputs.bucket }}
+          ACCESS_KEY_ID: ${{ steps.garage.outputs.access-key-id }}
+          SECRET_ACCESS_KEY: ${{ steps.garage.outputs.secret-access-key }}
+        run: |
+          set -euo pipefail
+          [[ "${S3_ENDPOINT}" == "http://localhost:3900" ]]
+          [[ "${REGION}" == "garage-east-1" ]]
+          [[ "${BUCKET}" == "garage" ]]
+          [[ "${ACCESS_KEY_ID}" == GK* ]]
+          [[ -n "${SECRET_ACCESS_KEY}" ]]
+
+      - name: S3 roundtrip via auto-set AWS env
+        run: |
+          set -euo pipefail
+          echo "hello garage" > upload.txt
+          aws s3 cp upload.txt s3://garage/upload.txt
+          aws s3 ls s3://garage/ | grep -q upload.txt
+          aws s3 cp s3://garage/upload.txt download.txt
+          diff upload.txt download.txt
+
+  e2e-custom:
+    name: E2E (custom inputs)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Garage
+        id: garage
+        uses: ./
+        with:
+          bucket: custom-bucket
+          s3-port: "9000"
+          region: us-test-1
+          container-name: garage-custom
+          access-key-id: GK31c5f2dab2a46c2a3b2653f3
+          secret-access-key: 4420d99ef7aa4f9d9bdad17a4a64fea0
+          set-aws-env: "false"
+
+      - name: Verify AWS env not set
+        run: |
+          set -euo pipefail
+          [[ -z "${AWS_ACCESS_KEY_ID:-}" ]]
+          [[ -z "${AWS_ENDPOINT_URL:-}" ]]
+
+      - name: S3 roundtrip via outputs
+        env:
+          AWS_ENDPOINT_URL: ${{ steps.garage.outputs.s3-endpoint }}
+          AWS_REGION: ${{ steps.garage.outputs.region }}
+          AWS_ACCESS_KEY_ID: ${{ steps.garage.outputs.access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.garage.outputs.secret-access-key }}
+          BUCKET: ${{ steps.garage.outputs.bucket }}
+        run: |
+          set -euo pipefail
+          [[ "${AWS_ENDPOINT_URL}" == "http://localhost:9000" ]]
+          echo "hello custom" > upload.txt
+          aws s3 cp upload.txt "s3://${BUCKET}/upload.txt"
+          aws s3 cp "s3://${BUCKET}/upload.txt" download.txt
+          diff upload.txt download.txt

@@ -1,0 +1,5 @@
+# actionlint treats unknown runner labels as errors. ubuntu-slim is a
+# GitHub-hosted 1 vCPU runner (GA Jan 2026) not yet in actionlint's label list.
+self-hosted-runner:
+  labels:
+    - ubuntu-slim
