@@ -33,7 +33,7 @@ Add the action to any Linux CI job. No configuration required.
 steps:
   - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-  - uses: lowlydba/setup-garage@0123456789abcdef0123456789abcdef01234567 # v1.0.0
+  - uses: lowlydba/setup-garage@4541bf2220810f325afe59324046f8278a1b477a # v1.0.0
 
   # AWS_* env vars are already set, just use S3
   - run: |
@@ -51,7 +51,7 @@ Credentials and a default bucket named `garage` are generated automatically. `AW
 Provide your own access key and secret to get predictable, reproducible values across test runs:
 
 ```yaml
-- uses: lowlydba/setup-garage@0123456789abcdef0123456789abcdef01234567 # v1.0.0
+- uses: lowlydba/setup-garage@4541bf2220810f325afe59324046f8278a1b477a # v1.0.0
   with:
     bucket: my-test-bucket
     access-key-id: GK31c5f2dab2a46c2a3b2653f3
@@ -67,7 +67,7 @@ Access key IDs must start with `GK`.
 If the job also connects to real AWS, set `set-aws-env: "false"` to avoid overwriting credentials, then pass the outputs explicitly:
 
 ```yaml
-- uses: lowlydba/setup-garage@0123456789abcdef0123456789abcdef01234567 # v1.0.0
+- uses: lowlydba/setup-garage@4541bf2220810f325afe59324046f8278a1b477a # v1.0.0
   id: garage
   with:
     set-aws-env: "false"
