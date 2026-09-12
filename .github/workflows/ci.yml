@@ -47,7 +47,7 @@ jobs:
 
       - name: Setup Garage
         id: garage
-        uses: ./
+        uses: $/
 
       - name: Verify outputs
         env:
@@ -86,7 +86,7 @@ jobs:
 
       - name: Setup Garage
         id: garage
-        uses: ./
+        uses: $/
         with:
           bucket: custom-bucket
           s3-port: "9000"
